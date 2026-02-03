@@ -1,123 +1,13 @@
-springboot 4.0
-
-## 加入mybatis-plus
-
-```
-<dependency>
-    <groupId>com.baomidou</groupId>
-    <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
-    <version>3.5.15</version>
-</dependency>
-```
-
-新建application.yml，写入
-
-```
-server:
-    port: 8090
-spring:
-    datasource:
-        url: jdbc:mysql://mysql6.sqlpub.com:3311
-        username: madgod
-        password: JAl5GKI9UnkPBYJk
-        driver-class-name: com.mysql.cj.jdbc.Driver
-```
-
-## 测试代码
-
-在Application.java同根文件夹下创建包：entity	mapper	service	service/impl
-
-创建User类	UserMapper接口	UserService接口	UserServiceImpl类
-
-1. userMapper.selectList方法是继承于**MyBatis Plus**的库，自带数据库查询函数
-
-```
-@Data
-public class User {
-    private Integer id;
-    private String no;
-    private String name;
-    private String password;
-    private Integer sex;
-    private Integer roleId;
-    private String phone;
-    @TableField("isValid")
-    private String isValid;
-}
-```
-
-```
-@Mapper
-public interface UserMapper extends BaseMapper<User> {
-}
-```
-
-```
-public interface UserService extends IService<User> {
-    List<User> list();
-}
-```
-
-```
-@Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-    @Resource
-    private UserMapper userMapper;
-
-    @Override
-    public List<User> list() {
-        return userMapper.selectList(null);
-    }
-}
-```
-
-##### 在controller中进行测试
-
-```
-@GetMapping("/list")
-public List<User> list(){
-    return userService.list();
-}
-```
-
-## 使用代码编辑器生成代码
-
-```
-<dependency>
-    <groupId>com.baomidou</groupId>
-    <artifactId>mybatis-plus-generator</artifactId>
-    <version>3.4.1</version>
-</dependency>
-<dependency>
-    <groupId>org.freemarker</groupId>
-    <artifactId>freemarker</artifactId>
-    <version>2.3.30</version>
-</dependency>
-<dependency>
-    <groupId>com.spring4all</groupId>
-    <artifactId>spring-boot-starter-swagger</artifactId>
-    <version>1.5.1.RELEASE</version>
-</dependency>
-```
-
-新建common包，添加CodeGenerator.java
-
-```
 package com.wms.demo.common;
 
 import org.apache.ibatis.annotations.Mapper;
 import com.baomidou.mybatisplus.generator.FastAutoGenerator;
 import com.baomidou.mybatisplus.generator.config.OutputFile;
-import com.baomidou.mybatisplus.generator.config.rules.DbColumnType;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
-import com.baomidou.mybatisplus.generator.keywords.MySqlKeyWordsHandler;
 import com.baomidou.mybatisplus.generator.model.ClassAnnotationAttributes;
 
 import java.nio.file.Paths;
-import java.sql.Types;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 
 public class CodeGenerator {
     /*
@@ -157,5 +47,3 @@ public class CodeGenerator {
                 .execute();
     }
 }
-```
-
