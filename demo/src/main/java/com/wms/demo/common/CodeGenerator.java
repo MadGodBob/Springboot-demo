@@ -42,8 +42,12 @@ public class CodeGenerator {
                                 .enableSkipView()
                                 .entityBuilder().enableLombok(new ClassAnnotationAttributes("@Data","lombok.Data"))
                                 .mapperBuilder().mapperAnnotation(Mapper.class)
+                                .controllerBuilder()
+                                .disable()
+                                .mapperBuilder()
+                                .mapperXmlTemplate("/templates/simple-mapper.xml")
                 )
-                .templateEngine(new FreemarkerTemplateEngine()) // 使用Freemarker引擎模板，默认的是Velocity引擎模板
+                .templateEngine(new FreemarkerTemplateEngine())
                 .execute();
     }
 }

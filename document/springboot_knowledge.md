@@ -82,21 +82,23 @@ public List<User> list(){
 
 ## 使用代码编辑器生成代码
 
+三种依赖分别是为了代码生成器、生成器模板、swagger调试
+
 ```
 <dependency>
     <groupId>com.baomidou</groupId>
     <artifactId>mybatis-plus-generator</artifactId>
-    <version>3.4.1</version>
+    <version>3.5.15</version>
 </dependency>
 <dependency>
     <groupId>org.freemarker</groupId>
     <artifactId>freemarker</artifactId>
-    <version>2.3.30</version>
+    <version>2.3.32</version>
 </dependency>
 <dependency>
-    <groupId>com.spring4all</groupId>
-    <artifactId>spring-boot-starter-swagger</artifactId>
-    <version>1.5.1.RELEASE</version>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.2.0</version>
 </dependency>
 ```
 
@@ -108,16 +110,11 @@ package com.wms.demo.common;
 import org.apache.ibatis.annotations.Mapper;
 import com.baomidou.mybatisplus.generator.FastAutoGenerator;
 import com.baomidou.mybatisplus.generator.config.OutputFile;
-import com.baomidou.mybatisplus.generator.config.rules.DbColumnType;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
-import com.baomidou.mybatisplus.generator.keywords.MySqlKeyWordsHandler;
 import com.baomidou.mybatisplus.generator.model.ClassAnnotationAttributes;
 
 import java.nio.file.Paths;
-import java.sql.Types;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 
 public class CodeGenerator {
     /*
@@ -152,10 +149,59 @@ public class CodeGenerator {
                                 .enableSkipView()
                                 .entityBuilder().enableLombok(new ClassAnnotationAttributes("@Data","lombok.Data"))
                                 .mapperBuilder().mapperAnnotation(Mapper.class)
+                                .controllerBuilder()
+                                .disable()
+                                .mapperBuilder()
+                                .mapperXmlTemplate("/templates/simple-mapper.xml")
                 )
-                .templateEngine(new FreemarkerTemplateEngine()) // 使用Freemarker引擎模板，默认的是Velocity引擎模板
+                .templateEngine(new FreemarkerTemplateEngine())
                 .execute();
     }
+}
+```
+
+在templates文件夹下新建xml的模板文件simple-mapper.xml.ftl
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="${package.Mapper}.${table.mapperName}">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="${package.Entity}.${entity}">
+        <#list table.fields as field>
+            <#if field.keyFlag>
+                <id column="${field.name}" property="${field.propertyName}" />
+            <#else>
+                <result column="${field.name}" property="${field.propertyName}" />
+            </#if>
+        </#list>
+    </resultMap>
+
+    <!-- 基础字段列表 -->
+    <sql id="Base_Column_List">
+        <#list table.fields as field>
+            ${field.name}<#if field_has_next>, </#if>
+        </#list>
+    </sql>
+
+</mapper>
+```
+
+## swagger调试
+
+```
+http://localhost:8090/swagger-ui/index.html
+```
+
+## 模糊匹配
+
+```
+@PostMapping("/listFuzzyByName")
+public List<User> listFuzzyByName(@RequestBody User user){
+    LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper();
+    lambdaQueryWrapper.like(User::getName, user.getName());
+    return userService.list(lambdaQueryWrapper);
 }
 ```
 
