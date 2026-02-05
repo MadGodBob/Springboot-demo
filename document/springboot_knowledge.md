@@ -205,3 +205,118 @@ public List<User> listFuzzyByName(@RequestBody User user){
 }
 ```
 
+## 分页
+
+#### 使用方法：Mybatis的分页拦截器。此外还有1.编写分页mapper方法 2.自定义xml文件中的SQL语言
+
+在Mybatis-plus 3.5.9后分页功能需要单独导入依赖
+
+```
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-jsqlparser</artifactId>
+    <version>3.5.15</version>
+</dependency>
+```
+
+添加MybatisPlusConfig类
+
+```
+@Configuration
+public class MybatisPlusConfig {
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+        return interceptor;
+    }
+}
+```
+
+定义分页类QueryPageData。PAGE_SIZE和PAGE_NUM是默认参数
+
+```
+@Data
+public class QueryPageData {
+    private static int PAGE_SIZE = 20;
+    private static int PAGE_NUM = 1;
+
+    private int pageSize = PAGE_SIZE;
+    private int pageNum = PAGE_NUM;
+
+    // data
+    private HashMap data;
+}
+```
+
+实现分页查询的简单测试。首先获取到请求中的pageSize pageNum，模糊搜索name：getData()得到HashMap，使用get("name")获取值但类型为泛型V因此需要强转，最后用IPage分页类进行承接
+
+```
+public List<User> listPage(@RequestBody QueryPageData query){
+    Page<User> page = new Page();
+    page.setCurrent(query.getPageNum());
+    page.setSize(query.getPageSize());
+    String name = (String)query.getData().get("name");
+
+    LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper();
+    lambdaQueryWrapper.like(User::getName, name);
+
+    IPage result = userService.page(page, lambdaQueryWrapper);
+    System.out.println(result.getTotal());
+
+    return result.getRecords();
+}
+```
+
+## 返回前端数据的封装
+
+创建Result类，返回的数据包含HTTP状态码 提示信息 返回数据长度 返回数据
+
+```
+@Data
+public class Result {
+    private static Integer SUCCESS_CODE = 200;
+    private static Integer ERROR_CODE = 400;
+
+    private Integer code;
+    private String msg;
+    private Long total;
+    private Object data;
+
+    // 成功
+    public static Result success(){
+        return setResult(SUCCESS_CODE, "success", 0L, null);
+    }
+    // 成功(带data)
+    public static Result success(Object data){
+        return setResult(SUCCESS_CODE, "success", 0L, data);
+    }
+    // 成功(带data和total)
+    public static Result success(Object data, Long total){
+        return setResult(SUCCESS_CODE, "success", total, data);
+    }
+
+    // 失败
+    public static Result error(Object data){
+        return setResult(ERROR_CODE, "error", 0L, data);
+    }
+
+    // 设置方法
+    public static Result setResult(Integer code, String msg, Long total, Object data){
+        Result res = new Result();
+        res.setCode(code);
+        res.setMsg(msg);
+        res.setTotal(total);
+        res.setData(data);
+        return res;
+    }
+}
+
+```
+
+示例
+
+```
+Result.success(result.getRecords(), result.getTotal());
+```
+

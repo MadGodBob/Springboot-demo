@@ -1,6 +1,10 @@
 package com.wms.demo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.wms.demo.common.QueryPageData;
+import com.wms.demo.common.Result;
 import com.wms.demo.entity.User;
 import com.wms.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,22 @@ public class test {
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper();
         lambdaQueryWrapper.like(User::getName, user.getName());
         return userService.list(lambdaQueryWrapper);
+    }
+
+    // 分页
+    @PostMapping("/listPage")
+    public Result listPage(@RequestBody QueryPageData query){
+        Page<User> page = new Page();
+        page.setCurrent(query.getPageNum());
+        page.setSize(query.getPageSize());
+        String name = (String)query.getData().get("name");
+
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper();
+        lambdaQueryWrapper.like(User::getName, name);
+
+        IPage result = userService.page(page, lambdaQueryWrapper);
+
+        return Result.success(result.getRecords(), result.getTotal());
     }
 
     // 新增
